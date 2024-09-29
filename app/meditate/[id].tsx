@@ -6,12 +6,18 @@ import AppGradient from "@/components/AppGradient";
 import { router, useLocalSearchParams } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import CustomButton from "@/components/CustomButton";
+import {Audio} from 'expo-av'
+import { MEDITATION_DATA,AUDIO_FILES } from "@/constants/meditation-data";
 
 const Meditate = () => {
   const { id } = useLocalSearchParams();
 
   const [secondsRemaining, setSecondsRemaining] = useState(10);
   const [isMeditating, setIsMeditating] = useState(false);
+
+  const [audioSound, setSound] = useState<Audio.Sound>();
+  const [isPlayingAudio, setPlayingAudio] = useState(false);
+
 
   useEffect(() => {
     let timerId: NodeJS.Timeout;
@@ -32,12 +38,48 @@ const Meditate = () => {
     };
   }, [secondsRemaining, isMeditating]);
 
+  useEffect(()=> {
+    return ()=> {
+      audioSound?.unloadAsync();
+    }
+  },[audioSound])
+
+  const toggleMeditationSessionStatus = async() => {
+    if(secondsRemaining === 0) setSecondsRemaining(10);
+    setIsMeditating(!isMeditating);
+    await toggledSound();
+  }
+
+  const toggledSound = async () => {
+    const sound = audioSound ? audioSound : await initializeSound();
+    const status = await sound?.getStatusAsync();
+    if(status?.isLoaded && !isPlayingAudio){
+      await sound.playAsync();
+      setPlayingAudio(true);
+    }else{
+      await sound.pauseAsync()
+      setPlayingAudio(false);
+    }
+  }
+
+
+  const initializeSound = async() => {
+    const audioFileName = MEDITATION_DATA[Number(id)-1].audio;
+
+    const {sound} = await Audio.Sound.createAsync(
+      AUDIO_FILES[audioFileName]
+    );
+    setSound(sound);
+    return sound
+  }
+
+
   //formate the time left for two digit in display
   const formatedTimeMinutes = String(
-    Math.floor(secondsRemaining/60)
-  ).padStart(2,'0')
+    Math.floor(secondsRemaining / 60)
+  ).padStart(2, "0");
 
-  const formatedTimeSeconds = String(secondsRemaining % 60).padStart(2,'0')
+  const formatedTimeSeconds = String(secondsRemaining % 60).padStart(2, "0");
 
   return (
     <View className="flex-1">
@@ -63,7 +105,7 @@ const Meditate = () => {
           <View className="mb-5">
             <CustomButton
               title="Start Meditation"
-              onPrss={() => setIsMeditating(true)}
+              onPrss={toggleMeditationSessionStatus}
             />
           </View>
         </AppGradient>
