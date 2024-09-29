@@ -5,11 +5,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import CustomButton from "@/components/CustomButton";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import AppGradient from "@/components/AppGradient";
 
 const App = () => {
-  const router = useRouter();
+  // const router = useRouter();
   return (
     <View className="flex-1 ">
       <ImageBackground
